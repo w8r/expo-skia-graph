@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
-import type { SkiaValue } from "@shopify/react-native-skia";
+import { SkiaValue, useValue } from "@shopify/react-native-skia";
 import {
   useComputedValue,
   useLoop,
+  Canvas,
   BlurMask,
   vec,
   Circle,
@@ -13,12 +14,13 @@ import {
   Easing,
   mix,
 } from "@shopify/react-native-skia";
-import { Canvas } from "./Canvas";
+//import { Canvas } from "./Canvas";
+import { GestureHandler } from "./GestureHandler";
 
 const c1 = "#61bea2";
 const c2 = "#529ca0";
 
-const N = 516;
+const N = 126;
 
 interface RingProps {
   index: number;
@@ -57,10 +59,11 @@ export const Breathe = () => {
     [height, width]
   );
 
-  const progress = useLoop({
-    duration: 3000,
-    easing: Easing.inOut(Easing.ease),
-  });
+  const progress = useValue(0.5);
+  // useLoop({
+  //   duration: 2000,
+  //   easing: Easing.inOut(Easing.ease),
+  // });
 
   const transform = useComputedValue(
     () => [{ rotate: mix(progress.current, -Math.PI / 2, 0) }],
@@ -68,14 +71,14 @@ export const Breathe = () => {
   );
 
   return (
-    <Canvas style={styles.container}>
+    <GestureHandler style={styles.container}>
       <Fill color="rgb(36,43,56)" />
-      <Group origin={center} transform={transform} blendMode="screen">
+      <Group origin={center} transform={transform}>
         {new Array(N).fill(0).map((_, index) => {
           return <Ring key={index} index={index} progress={progress} />;
         })}
       </Group>
-    </Canvas>
+    </GestureHandler>
   );
 };
 
