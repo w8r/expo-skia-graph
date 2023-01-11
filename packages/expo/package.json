@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "expo start",
+    "start": "npx expo start --clear",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -11,12 +11,14 @@
     "postinstall": "./node_modules/@shopify/react-native-skia/scripts/setup-canvaskit.js"
   },
   "dependencies": {
+    "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@shopify/react-native-skia": "0.1.157",
     "expo": "~47.0.12",
     "expo-status-bar": "~1.4.2",
     "react": "18.1.0",
     "react-dom": "18.1.0",
     "react-native": "0.70.5",
+    "react-native-reanimated": "~2.12.0",
     "react-native-web": "~0.18.9"
   },
   "devDependencies": {

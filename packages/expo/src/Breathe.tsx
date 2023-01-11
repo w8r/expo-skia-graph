@@ -6,7 +6,6 @@ import {
   useLoop,
   BlurMask,
   vec,
-  Canvas,
   Circle,
   Fill,
   Group,
@@ -14,6 +13,7 @@ import {
   Easing,
   mix,
 } from "@shopify/react-native-skia";
+import { Canvas } from "./Canvas";
 
 const c1 = "#61bea2";
 const c2 = "#529ca0";
