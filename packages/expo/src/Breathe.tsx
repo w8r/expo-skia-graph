@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
-import { SkiaValue, useValue } from "@shopify/react-native-skia";
+import { Line, SkiaValue, useValue } from "@shopify/react-native-skia";
 import {
   useComputedValue,
   useLoop,
@@ -44,10 +44,10 @@ const Ring = ({ index, progress }: RingProps) => {
     const scale = mix(progress.current, 0.3, 1);
     return [{ translateX: x }, { translateY: y }, { scale }];
   }, [progress]);
-
   return (
     <Group origin={center} transform={transform}>
       <Circle c={center} r={R / N} color={index % 2 ? c1 : c2} />
+      <Line p1={center} p2={vec(0, 0)} color="white" strokeWidth={1} />
     </Group>
   );
 };
