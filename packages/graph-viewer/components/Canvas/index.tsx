@@ -9,7 +9,7 @@ import {
 } from "@shopify/react-native-skia";
 import { GestureHandler } from "./GestureHandler";
 import { makeMutable } from "react-native-reanimated";
-import { Dimensions, View } from "react-native";
+import { View } from "react-native";
 import { getTransformFromShapes } from "./utils";
 
 // phyllotaxis
@@ -17,13 +17,13 @@ import { getTransformFromShapes } from "./utils";
 const phyllotaxis = (n: number) => {
   const theta = Math.PI * (3 - Math.sqrt(5));
   return (i: number) => {
-    const r = Math.sqrt(i / n) * 50;
+    const r = Math.sqrt(i / n) * 450;
     const th = i * theta;
-    return { x: r * Math.cos(th), y: r * Math.sin(th), radius: 1 };
+    return { x: r * Math.cos(th), y: r * Math.sin(th), radius: 12 };
   };
 };
 
-const N = 500;
+const N = 400;
 
 const getPoint = phyllotaxis(N);
 const points = Array.from({ length: N }, (_, i) => getPoint(i));
@@ -62,31 +62,38 @@ const Container: FC<ViewProps> = (props) => {
       height
     )
   );
-  const fontSize = 1;
+  const fontSize = 12;
   const font = useFont(
-    require("../../assets/fonts/SpaceMono-Regular.ttf"),
+    require("../../assets/fonts/Geist-Regular.ttf"),
     fontSize
   );
-  console.log("font", width, height);
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayout} {...props}>
+    <View onLayout={onLayout} {...props}>
       <GestureHandler matrix={matrix}>
         <Canvas style={{ overflow: "hidden" }}>
-          <Group blendMode="multiply" matrix={matrix}>
-            {/* <Circle cx={r} cy={r} r={r} color="cyan" />
-          <Circle cx={width - r} cy={r} r={r} color="magenta" />
-          <Circle cx={width / 2} cy={width - r} r={r} color="yellow" /> */}
+          <Group matrix={matrix}>
+            <Circle cx={r} cy={r} r={r} color="cyan" />
+            <Circle cx={width - r} cy={r} r={r} color="magenta" />
+            <Circle cx={width / 2} cy={width - r} r={r} color="yellow" />
             {points.map(({ x, y, radius }, i) => (
               <Group key={i}>
                 <Circle cx={x} cy={y} r={radius} color={getRandomHexColor()} />
-                {/* <Text
-                  font={font}
-                  x={x}
-                  y={y + 1.5}
-                  color={"darkblue"}
-                  text="text"
-                /> */}
+                <Circle
+                  cx={x + 10}
+                  cy={y}
+                  r={radius}
+                  color={getRandomHexColor()}
+                />
+                {false && (
+                  <Text
+                    font={font}
+                    x={x}
+                    y={y + 1.5}
+                    color={"darkblue"}
+                    text="text"
+                  />
+                )}
               </Group>
             ))}
           </Group>

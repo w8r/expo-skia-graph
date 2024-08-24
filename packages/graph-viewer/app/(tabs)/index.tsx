@@ -23,7 +23,7 @@ export default function HomeScreen() {
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <Canvas style={{ flex: 1, width: 500 }} />
+        <Canvas style={{ flex: 1, width: 500, height: 400 }} />
         <ThemedText>
           Edit{" "}
           <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}

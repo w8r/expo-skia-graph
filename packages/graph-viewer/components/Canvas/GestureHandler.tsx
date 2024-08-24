@@ -33,6 +33,7 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
         matrix.value,
         vec(event.focalX, event.focalY)
       );
+      console.log(event.scale);
       matrix.value = zoomAroundPoint(offset.value, event.scale, pivot.value);
     });
 
@@ -69,10 +70,9 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
   const onViewCreated = useCallback(
     (view: View) => {
       containerRef.current = view;
-      (containerRef.current as unknown as HTMLElement)?.addEventListener(
-        "wheel",
-        onWheel
-      );
+      if (!view) return;
+      const element = view as unknown as HTMLElement;
+      if (element.addEventListener) element.addEventListener("wheel", onWheel);
     },
     [matrix]
   );
