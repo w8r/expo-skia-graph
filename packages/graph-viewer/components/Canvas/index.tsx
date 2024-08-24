@@ -69,37 +69,35 @@ const Container: FC<ViewProps> = (props) => {
   );
 
   return (
-    <View onLayout={onLayout} {...props}>
-      <GestureHandler matrix={matrix}>
-        <Canvas style={{ overflow: "hidden" }}>
-          <Group matrix={matrix}>
-            <Circle cx={r} cy={r} r={r} color="cyan" />
-            <Circle cx={width - r} cy={r} r={r} color="magenta" />
-            <Circle cx={width / 2} cy={width - r} r={r} color="yellow" />
-            {points.map(({ x, y, radius }, i) => (
-              <Group key={i}>
-                <Circle cx={x} cy={y} r={radius} color={getRandomHexColor()} />
-                <Circle
-                  cx={x + 10}
-                  cy={y}
-                  r={radius}
-                  color={getRandomHexColor()}
+    <GestureHandler matrix={matrix}>
+      <Canvas {...props} onLayout={onLayout}>
+        <Group matrix={matrix}>
+          <Circle cx={r} cy={r} r={r} color="cyan" />
+          <Circle cx={width - r} cy={r} r={r} color="magenta" />
+          <Circle cx={width / 2} cy={width - r} r={r} color="yellow" />
+          {points.map(({ x, y, radius }, i) => (
+            <Group key={i}>
+              <Circle cx={x} cy={y} r={radius} color={getRandomHexColor()} />
+              <Circle
+                cx={x + 10}
+                cy={y}
+                r={radius}
+                color={getRandomHexColor()}
+              />
+              {false && (
+                <Text
+                  font={font}
+                  x={x}
+                  y={y + 1.5}
+                  color={"darkblue"}
+                  text="text"
                 />
-                {false && (
-                  <Text
-                    font={font}
-                    x={x}
-                    y={y + 1.5}
-                    color={"darkblue"}
-                    text="text"
-                  />
-                )}
-              </Group>
-            ))}
-          </Group>
-        </Canvas>
-      </GestureHandler>
-    </View>
+              )}
+            </Group>
+          ))}
+        </Group>
+      </Canvas>
+    </GestureHandler>
   );
 };
 
