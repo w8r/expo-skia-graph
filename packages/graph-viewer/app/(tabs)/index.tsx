@@ -6,8 +6,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import Canvas from "@/components/Canvas";
 
-import { Canvas as C2, Circle } from "@shopify/react-native-skia";
-
 export default function HomeScreen() {
   return (
     <ParallaxScrollView
@@ -25,16 +23,6 @@ export default function HomeScreen() {
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <C2
-          style={{
-            width: 300,
-            height: 100,
-            borderColor: "#0000ff",
-            borderWidth: 1,
-          }}
-        >
-          <Circle c={{ x: 150, y: 50 }} r={50} color="#ff0000" />
-        </C2>
         <Canvas
           style={{
             flex: 1,
