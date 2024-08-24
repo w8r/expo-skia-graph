@@ -3,15 +3,11 @@ import { StyleSheet, useWindowDimensions } from "react-native";
 import { Line, SkiaValue, useValue } from "@shopify/react-native-skia";
 import {
   useComputedValue,
-  useLoop,
-  Canvas,
-  BlurMask,
   vec,
   Circle,
   Fill,
   Group,
   polar2Canvas,
-  Easing,
   mix,
 } from "@shopify/react-native-skia";
 //import { Canvas } from "./Canvas";
@@ -81,9 +77,6 @@ export const Breathe = () => {
     </GestureHandler>
   );
 };
-
-// Export Breathe as default, we can lazy-load this way easier.
-export default Breathe;
 
 const styles = StyleSheet.create({
   container: {
