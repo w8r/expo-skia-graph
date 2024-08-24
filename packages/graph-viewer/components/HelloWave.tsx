@@ -15,9 +15,9 @@ export function HelloWave() {
   rotationAnimation.value = withRepeat(
     withSequence(
       withTiming(25, { duration: 150 }),
-      withTiming(0, { duration: 150 })
+      withTiming(0, { duration: 150 }),
     ),
-    144 // Run the animation 4 times
+    144, // Run the animation 4 times
   );
 
   const animatedStyle = useAnimatedStyle(() => ({

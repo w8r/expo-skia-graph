@@ -59,13 +59,13 @@ const Container: FC<ViewProps> = (props) => {
       //   { x: width / 2, y: width - r, radius: r },
       // ],
       width,
-      height
-    )
+      height,
+    ),
   );
   const fontSize = 12;
   const font = useFont(
     require("../../assets/fonts/Geist-Regular.ttf"),
-    fontSize
+    fontSize,
   );
 
   return (
@@ -84,7 +84,7 @@ const Container: FC<ViewProps> = (props) => {
                 r={radius}
                 color={getRandomHexColor()}
               />
-              {false && (
+              {
                 <Text
                   font={font}
                   x={x}
@@ -92,7 +92,7 @@ const Container: FC<ViewProps> = (props) => {
                   color={"darkblue"}
                   text="text"
                 />
-              )}
+              }
             </Group>
           ))}
         </Group>

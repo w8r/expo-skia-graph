@@ -5,7 +5,7 @@ import {
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
-import { useSharedValue } from "react-native-reanimated";
+import { useSharedValue, withDecay } from "react-native-reanimated";
 import { invertTransform, rotateZ, translate, zoomAroundPoint } from "./utils";
 import { View } from "react-native";
 import { MutableRefObject, useCallback, useRef } from "react";
@@ -31,9 +31,8 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
     .onChange((event) => {
       pivot.value = invertTransform(
         matrix.value,
-        vec(event.focalX, event.focalY)
+        vec(event.focalX, event.focalY),
       );
-      console.log(event.scale);
       matrix.value = zoomAroundPoint(offset.value, event.scale, pivot.value);
     });
 
@@ -59,12 +58,12 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
       containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
         pivot.value = invertTransform(
           matrix.value,
-          vec(event.clientX - pageX, event.clientY - pageY)
+          vec(event.clientX - pageX, event.clientY - pageY),
         );
         matrix.value = zoomAroundPoint(matrix.value, dz, pivot.value);
       });
     },
-    [matrix]
+    [matrix],
   );
 
   const onViewCreated = useCallback(
@@ -74,7 +73,7 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
       const element = view as unknown as HTMLElement;
       if (element.addEventListener) element.addEventListener("wheel", onWheel);
     },
-    [matrix]
+    [matrix],
   );
 
   return (
