@@ -54,7 +54,6 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
   // store dimensions in the state once the element is rendered
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const onLayout = useCallback((event: LayoutChangeEvent) => {
-    console.log("onLayout", event.nativeEvent.layout);
     const { width, height } = event.nativeEvent.layout;
     setDimensions({ width, height });
   }, []);
@@ -62,9 +61,7 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
   const { width, height } = dimensions;
 
   // not layouted yet
-  //if (width === 0 || height === 0) return null;
-
-  console.log("dimensions", width, height);
+  // if (width === 0 || height === 0) return null;
 
   const r = width * 0.13;
   const matrix = makeMutable(

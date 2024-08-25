@@ -1,14 +1,40 @@
 import * as React from "react";
-import {
-  createContext,
-  FC,
-  useContext,
-  useState,
-  useEffect,
-  ProviderProps,
-} from "react";
-import type { Graph, GraphEdge, GraphNode, Id } from "../../types/graph";
+import { createContext, FC, useContext, useState, useEffect } from "react";
+import type { Graph, GraphEdge, GraphNode, Hex, Id } from "../../types/graph";
 import { ViewProps } from "react-native";
+import { quadtree as d3quadtree } from "d3-quadtree";
+
+const phyllotaxis = (n: number) => {
+  const theta = Math.PI * (3 - Math.sqrt(5));
+  return (i: number) => {
+    const r = Math.sqrt(i / n) * 450;
+    const th = i * theta;
+    return { x: r * Math.cos(th), y: r * Math.sin(th), radius: 12 };
+  };
+};
+
+const N = 400;
+
+const getPoint = phyllotaxis(N);
+const points = Array.from({ length: N }, (_, i) => getPoint(i));
+const getRandomHexColor = () => {
+  const hex = Math.floor(Math.random() * 0xffffff).toString(16);
+  return `#${hex.padStart(6, "0")}` as Hex;
+};
+
+const defaultGraph: Graph = {
+  id: "",
+  nodes: points.map(({ x, y, radius }, i) => ({
+    id: i.toString(),
+    attributes: {
+      x,
+      y,
+      radius,
+      color: getRandomHexColor(),
+    },
+  })),
+  edges: [],
+};
 
 export type VisState = {
   graph: Graph;
@@ -24,6 +50,9 @@ export type VisState = {
 
   selectNode: (id: Id | Id[]) => void;
   selectEdge: (id: Id | Id[]) => void;
+  moveNode: (id: Id, x: number, y: number) => void;
+  addNode: (node: GraphNode) => void;
+  removeNode: (id: Id) => void;
   clearSelection: () => void;
 };
 
@@ -32,11 +61,16 @@ export const VisContext = createContext<VisState>({
 } as any as VisState);
 
 export const VisProvider: FC<ViewProps> = ({ children }) => {
-  const [graph, setGraph] = useState<Graph>({
-    id: "",
-    nodes: [],
-    edges: [],
-  });
+  const [graph, setGraph] = useState<Graph>(defaultGraph);
+  const quadtree = d3quadtree<GraphNode>()
+    .x((d) => d.attributes.x)
+    .y((d) => d.attributes.y);
+
+  console.log("graph", graph);
+  quadtree.addAll(graph.nodes);
+
+  const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
+
   const [selectedNodes, setSelectedNodes] = useState<GraphNode[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<GraphEdge[]>([]);
 
@@ -106,6 +140,33 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
     setGraph({ ...graph });
   };
 
+  const addNode = (node: GraphNode) => {
+    graph.nodes.push(node);
+    setGraph({ ...graph });
+    quadtree.add(node);
+  };
+
+  const removeNode = (id: Id) => {
+    const node = nodeMap.get(id);
+    if (!node) return;
+    graph.nodes = graph.nodes.filter((n) => n.id !== id);
+    setGraph({ ...graph });
+    quadtree.remove(node);
+  };
+
+  const moveNode = (id: Id, x: number, y: number) => {
+    const node = nodeMap.get(id);
+    if (!node) return;
+    quadtree.remove(node);
+
+    node.attributes.x = x;
+    node.attributes.y = y;
+
+    setGraph({ ...graph });
+
+    requestAnimationFrame(() => quadtree.add(node));
+  };
+
   return (
     <VisContext.Provider
       value={
@@ -123,6 +184,10 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
           selectNode,
           selectEdge,
           clearSelection,
+
+          addNode,
+          removeNode,
+          moveNode,
         } as VisState
       }
     >
