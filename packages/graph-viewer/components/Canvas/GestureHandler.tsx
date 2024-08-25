@@ -20,6 +20,8 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
   const pivot = useSharedValue(Skia.Point(0, 0));
   const offset = useSharedValue(Skia.Matrix());
   const pan = Gesture.Pan().onChange((event) => {
+    // here we can have lasso
+    // or be dragging nodes
     matrix.value = translate(matrix.value, event.changeX, event.changeY);
   });
   const containerRef = useRef<View>(null) as MutableRefObject<View>;
@@ -31,7 +33,7 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
     .onChange((event) => {
       pivot.value = invertTransform(
         matrix.value,
-        vec(event.focalX, event.focalY),
+        vec(event.focalX, event.focalY)
       );
       matrix.value = zoomAroundPoint(offset.value, event.scale, pivot.value);
     });
@@ -58,12 +60,12 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
       containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
         pivot.value = invertTransform(
           matrix.value,
-          vec(event.clientX - pageX, event.clientY - pageY),
+          vec(event.clientX - pageX, event.clientY - pageY)
         );
         matrix.value = zoomAroundPoint(matrix.value, dz, pivot.value);
       });
     },
-    [matrix],
+    [matrix]
   );
 
   const onViewCreated = useCallback(
@@ -73,7 +75,7 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
       const element = view as unknown as HTMLElement;
       if (element.addEventListener) element.addEventListener("wheel", onWheel);
     },
-    [matrix],
+    [matrix]
   );
 
   return (
