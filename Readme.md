@@ -1,3 +1,3 @@
 - [ ] implement graph drawing from the simple format
-- [ ] implement touch zooming/panning
-- [ ] implement mouse zooming/panning
+- [x] implement touch zooming/panning
+- [x] implement mouse zooming/panning
