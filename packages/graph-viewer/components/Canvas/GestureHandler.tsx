@@ -9,6 +9,7 @@ import { useSharedValue, withDecay } from "react-native-reanimated";
 import { invertTransform, rotateZ, translate, zoomAroundPoint } from "./utils";
 import { View } from "react-native";
 import { MutableRefObject, useCallback, useRef } from "react";
+import { useVis } from "./context";
 
 interface GestureHandlerProps {
   matrix: SharedValue<SkMatrix>;
@@ -19,6 +20,7 @@ interface GestureHandlerProps {
 export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
   const pivot = useSharedValue(Skia.Point(0, 0));
   const offset = useSharedValue(Skia.Matrix());
+  const { getElementAt } = useVis();
   const pan = Gesture.Pan().onChange((event) => {
     // here we can have lasso
     // or be dragging nodes
@@ -48,7 +50,7 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
     });
 
   const longTap = Gesture.LongPress().onEnd((event) => {
-    console.log("long tap", event);
+    console.log("long tap", event, getElementAt(event.x, event.y));
   });
 
   const gesture = Gesture.Race(pan, pinch, rotate, longTap);

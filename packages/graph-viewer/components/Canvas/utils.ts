@@ -64,6 +64,16 @@ export function getTransformFromShapes(
   );
 }
 
+export function matrixToTransform(matrix: SkMatrix) {
+  "worklet";
+  const m = matrix.get();
+  return {
+    x: m[MatrixIndex.TransX],
+    y: m[MatrixIndex.TransY],
+    scale: m[MatrixIndex.ScaleX],
+  };
+}
+
 export function applyTransform(matrix: SkMatrix, input: Vector) {
   "worklet";
   const m = matrix.get();

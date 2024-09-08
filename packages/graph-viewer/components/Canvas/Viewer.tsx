@@ -11,6 +11,7 @@ import { GestureHandler } from "./GestureHandler";
 import { makeMutable } from "react-native-reanimated";
 import { getTransformFromShapes } from "./utils";
 import { Graph } from "@/types/graph";
+import { useVis } from "./context";
 
 // phyllotaxis
 // https://en.wikipedia.org/wiki/Phyllotaxis
@@ -51,11 +52,13 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
   graph = defaultGraph,
   ...props
 }) => {
+  const { size, setSize, setMatrix, matrix } = useVis();
   // store dimensions in the state once the element is rendered
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     setDimensions({ width, height });
+    setSize({ width, height });
   }, []);
 
   const { width, height } = dimensions;
@@ -64,18 +67,30 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
   // if (width === 0 || height === 0) return null;
 
   const r = width * 0.13;
-  const matrix = makeMutable(
-    getTransformFromShapes(
-      points,
-      // [
-      //   { x: r, y: r, radius: r },
-      //   { x: width - r, y: r, radius: r },
-      //   { x: width / 2, y: width - r, radius: r },
-      // ],
-      width,
-      height
-    )
+
+  // const matrix = makeMutable(
+  //   getTransformFromShapes(
+  //     points,
+  //     // [
+  //     //   { x: r, y: r, radius: r },
+  //     //   { x: width - r, y: r, radius: r },
+  //     //   { x: width / 2, y: width - r, radius: r },
+  //     // ],
+  //     width,
+  //     height
+  //   )
+  // );
+  matrix.value = getTransformFromShapes(
+    points,
+    // [
+    //   { x: r, y: r, radius: r },
+    //   { x: width - r, y: r, radius: r },
+    //   { x: width / 2, y: width - r, radius: r },
+    // ],
+    width,
+    height
   );
+  //setMatrix(matrix);
   const fontSize = 12;
   const font = useFont(
     require("../../assets/fonts/Geist-Regular.ttf"),
@@ -86,25 +101,16 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
     <GestureHandler matrix={matrix}>
       <Canvas {...props} onLayout={onLayout}>
         <Group matrix={matrix}>
-          <Circle cx={r} cy={r} r={r} color="cyan" />
-          <Circle cx={width - r} cy={r} r={r} color="magenta" />
-          <Circle cx={width / 2} cy={width - r} r={r} color="yellow" />
-          {graph.nodes.map(({ attributes: { x, y, radius } }, i) => (
+          {graph.nodes.map(({ id, attributes: { x, y, radius } }, i) => (
             <Group key={i}>
               <Circle cx={x} cy={y} r={radius} color={getRandomHexColor()} />
-              <Circle
-                cx={x + 10}
-                cy={y}
-                r={radius}
-                color={getRandomHexColor()}
-              />
               {
                 <Text
                   font={font}
                   x={x}
                   y={y + 1.5}
                   color={"darkblue"}
-                  text="text"
+                  text={id}
                 />
               }
             </Group>

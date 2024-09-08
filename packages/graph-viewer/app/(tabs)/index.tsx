@@ -26,8 +26,8 @@ export default function HomeScreen() {
         <Canvas
           style={{
             flex: 1,
-            width: 300,
-            height: 400,
+            width: 1200,
+            height: 900,
             borderColor: "#ff0000",
             borderWidth: 1,
           }}

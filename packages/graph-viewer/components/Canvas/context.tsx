@@ -1,8 +1,11 @@
-import * as React from "react";
+import React, { useCallback, type Dispatch, type SetStateAction } from "react";
 import { createContext, FC, useContext, useState, useEffect } from "react";
 import type { Graph, GraphEdge, GraphNode, Hex, Id } from "../../types/graph";
 import { ViewProps } from "react-native";
 import { quadtree as d3quadtree } from "d3-quadtree";
+import { Skia, vec, type SkMatrix } from "@shopify/react-native-skia";
+import { makeMutable } from "react-native-reanimated";
+import { invertTransform } from "./utils";
 
 const phyllotaxis = (n: number) => {
   const theta = Math.PI * (3 - Math.sqrt(5));
@@ -14,6 +17,7 @@ const phyllotaxis = (n: number) => {
 };
 
 const N = 400;
+const tolerance = 10;
 
 const getPoint = phyllotaxis(N);
 const points = Array.from({ length: N }, (_, i) => getPoint(i));
@@ -21,6 +25,8 @@ const getRandomHexColor = () => {
   const hex = Math.floor(Math.random() * 0xffffff).toString(16);
   return `#${hex.padStart(6, "0")}` as Hex;
 };
+
+type MutableMatrix = ReturnType<typeof makeMutable<SkMatrix>>;
 
 const defaultGraph: Graph = {
   id: "",
@@ -54,6 +60,16 @@ export type VisState = {
   addNode: (node: GraphNode) => void;
   removeNode: (id: Id) => void;
   clearSelection: () => void;
+
+  getElementAt: (x: number, y: number) => GraphNode | GraphEdge | null;
+
+  matrix: MutableMatrix;
+  setMatrix: Dispatch<SetStateAction<MutableMatrix>>;
+  size: {
+    width: number;
+    height: number;
+  };
+  setSize: (size: { width: number; height: number }) => void;
 };
 
 export const VisContext = createContext<VisState>({
@@ -75,6 +91,9 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
   const [selectedEdges, setSelectedEdges] = useState<GraphEdge[]>([]);
 
   const [isSelecting, setIsSelecting] = useState(false);
+  const [size, setSize] = useState({ width: 200, height: 200 });
+  const initialMatrix = makeMutable(Skia.Matrix());
+  const [matrix, setMatrix] = useState<MutableMatrix>(initialMatrix);
 
   useEffect(() => {
     setSelectedNodes(graph.nodes.filter((node) => node.attributes.selected));
@@ -103,6 +122,26 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
         else setSelectedNodes(selectedNodes.filter((n) => n.id !== id));
       }
     });
+  };
+
+  const screenToWorld = useCallback(
+    (sx: number, sy: number) => {
+      const worldPoint = invertTransform(matrix.value, vec(sx, sy));
+      return worldPoint;
+    },
+    [size, matrix]
+  );
+
+  const getElementAt = (x: number, y: number) => {
+    const pos = screenToWorld(x, y);
+    let node = quadtree.find(pos.x, pos.y, tolerance) || null;
+    if (node) {
+      const dx = node.attributes.x - pos.x;
+      const dy = node.attributes.y - pos.y;
+      const r = node.attributes.radius;
+      if (dx * dx + dy * dy > r * r) node = null;
+      else return node;
+    }
   };
 
   const selectEdge = (id: string | string[]) => {
@@ -185,9 +224,16 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
           selectEdge,
           clearSelection,
 
+          getElementAt,
+
           addNode,
           removeNode,
           moveNode,
+
+          matrix,
+          setMatrix,
+          size,
+          setSize,
         } as VisState
       }
     >
