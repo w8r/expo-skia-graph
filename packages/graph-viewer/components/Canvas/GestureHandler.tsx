@@ -20,7 +20,7 @@ interface GestureHandlerProps {
 export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
   const pivot = useSharedValue(Skia.Point(0, 0));
   const offset = useSharedValue(Skia.Matrix());
-  const { getElementAt } = useVis();
+  const { getElementAt, selectNode, clearSelection } = useVis();
   const pan = Gesture.Pan().onChange((event) => {
     // here we can have lasso
     // or be dragging nodes
@@ -50,7 +50,9 @@ export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
     });
 
   const longTap = Gesture.LongPress().onEnd((event) => {
-    console.log("long tap", event, getElementAt(event.x, event.y));
+    const node = getElementAt(event.x, event.y);
+    if (node) selectNode(node.id);
+    else clearSelection();
   });
 
   const gesture = Gesture.Race(pan, pinch, rotate, longTap);

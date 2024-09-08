@@ -8,8 +8,6 @@ import {
   Text,
 } from "@shopify/react-native-skia";
 import { GestureHandler } from "./GestureHandler";
-import { makeMutable } from "react-native-reanimated";
-import { getTransformFromShapes } from "./utils";
 import { Graph } from "@/types/graph";
 import { useVis } from "./context";
 
@@ -61,36 +59,9 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
     setSize({ width, height });
   }, []);
 
-  const { width, height } = dimensions;
-
   // not layouted yet
   // if (width === 0 || height === 0) return null;
 
-  const r = width * 0.13;
-
-  // const matrix = makeMutable(
-  //   getTransformFromShapes(
-  //     points,
-  //     // [
-  //     //   { x: r, y: r, radius: r },
-  //     //   { x: width - r, y: r, radius: r },
-  //     //   { x: width / 2, y: width - r, radius: r },
-  //     // ],
-  //     width,
-  //     height
-  //   )
-  // );
-  matrix.value = getTransformFromShapes(
-    points,
-    // [
-    //   { x: r, y: r, radius: r },
-    //   { x: width - r, y: r, radius: r },
-    //   { x: width / 2, y: width - r, radius: r },
-    // ],
-    width,
-    height
-  );
-  //setMatrix(matrix);
   const fontSize = 12;
   const font = useFont(
     require("../../assets/fonts/Geist-Regular.ttf"),
@@ -101,9 +72,9 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
     <GestureHandler matrix={matrix}>
       <Canvas {...props} onLayout={onLayout}>
         <Group matrix={matrix}>
-          {graph.nodes.map(({ id, attributes: { x, y, radius } }, i) => (
+          {graph.nodes.map(({ id, attributes: { x, y, radius, color } }, i) => (
             <Group key={i}>
-              <Circle cx={x} cy={y} r={radius} color={getRandomHexColor()} />
+              <Circle cx={x} cy={y} r={radius} color={color} />
               {
                 <Text
                   font={font}

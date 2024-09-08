@@ -5,7 +5,7 @@ import { ViewProps } from "react-native";
 import { quadtree as d3quadtree } from "d3-quadtree";
 import { Skia, vec, type SkMatrix } from "@shopify/react-native-skia";
 import { makeMutable } from "react-native-reanimated";
-import { invertTransform } from "./utils";
+import { getTransformFromShapes, invertTransform } from "./utils";
 
 const phyllotaxis = (n: number) => {
   const theta = Math.PI * (3 - Math.sqrt(5));
@@ -96,6 +96,12 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
   const [matrix, setMatrix] = useState<MutableMatrix>(initialMatrix);
 
   useEffect(() => {
+    matrix.value = getTransformFromShapes(points, size.width, size.height);
+
+    console.log("change", matrix.value.get());
+  }, []);
+
+  useEffect(() => {
     setSelectedNodes(graph.nodes.filter((node) => node.attributes.selected));
     setSelectedEdges(graph.edges.filter((edge) => edge.attributes.selected));
   }, [graph]);
@@ -125,24 +131,24 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
   };
 
   const screenToWorld = useCallback(
-    (sx: number, sy: number) => {
-      const worldPoint = invertTransform(matrix.value, vec(sx, sy));
-      return worldPoint;
-    },
+    (sx: number, sy: number) => invertTransform(matrix.value, vec(sx, sy)),
     [size, matrix]
   );
 
-  const getElementAt = (x: number, y: number) => {
-    const pos = screenToWorld(x, y);
-    let node = quadtree.find(pos.x, pos.y, tolerance) || null;
-    if (node) {
-      const dx = node.attributes.x - pos.x;
-      const dy = node.attributes.y - pos.y;
-      const r = node.attributes.radius;
-      if (dx * dx + dy * dy > r * r) node = null;
-      else return node;
-    }
-  };
+  const getElementAt = useCallback(
+    (x: number, y: number) => {
+      const pos = screenToWorld(x, y);
+      let node = quadtree.find(pos.x, pos.y, tolerance) || null;
+      if (node) {
+        const dx = node.attributes.x - pos.x;
+        const dy = node.attributes.y - pos.y;
+        const r = node.attributes.radius;
+        if (dx * dx + dy * dy > r * r) node = null;
+        else return node;
+      }
+    },
+    [size, matrix]
+  );
 
   const selectEdge = (id: string | string[]) => {
     if (Array.isArray(id)) {
