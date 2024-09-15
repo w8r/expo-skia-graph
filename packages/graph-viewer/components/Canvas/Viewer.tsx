@@ -8,7 +8,7 @@ import {
   Text,
 } from "@shopify/react-native-skia";
 import { GestureHandler } from "./GestureHandler";
-import { Graph } from "@/types/graph";
+import { Color, Graph } from "@/types/graph";
 import { useVis } from "./context";
 
 // phyllotaxis
@@ -28,10 +28,11 @@ const getPoint = phyllotaxis(N);
 const points = Array.from({ length: N }, (_, i) => getPoint(i));
 const getRandomHexColor = () => {
   const hex = Math.floor(Math.random() * 0xffffff).toString(16);
-  return `#${hex.padStart(6, "0")}`;
+  return `#${hex.padStart(6, "0")}` as Color;
 };
 
-const defaultGraph = {
+const defaultGraph: Graph = {
+  id: "_",
   nodes: points.map(({ x, y, radius }, i) => ({
     id: i.toString(),
     attributes: {
@@ -50,12 +51,13 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
   graph = defaultGraph,
   ...props
 }) => {
-  const { size, setSize, setMatrix, matrix } = useVis();
+  const { setSize, setMatrix, matrix } = useVis();
   // store dimensions in the state once the element is rendered
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [, setDimensions] = useState({ width: 0, height: 0 });
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     setDimensions({ width, height });
+    console.log("center", "width", width, "height", height, graph);
     setSize({ width, height });
   }, []);
 
@@ -72,20 +74,27 @@ export const Viewer: FC<ViewProps & { graph?: Graph }> = ({
     <GestureHandler matrix={matrix}>
       <Canvas {...props} onLayout={onLayout}>
         <Group matrix={matrix}>
-          {graph.nodes.map(({ id, attributes: { x, y, radius, color } }, i) => (
-            <Group key={i}>
-              <Circle cx={x} cy={y} r={radius} color={color} />
-              {
-                <Text
-                  font={font}
-                  x={x}
-                  y={y + 1.5}
-                  color={"darkblue"}
-                  text={id}
+          {graph.nodes.map(
+            ({ id, attributes: { x, y, radius, color, selected } }, i) => (
+              <Group key={i}>
+                <Circle
+                  cx={x}
+                  cy={y}
+                  r={radius}
+                  color={selected ? "red" : color}
                 />
-              }
-            </Group>
-          ))}
+                {
+                  <Text
+                    font={font}
+                    x={x}
+                    y={y + 1.5}
+                    color={"darkblue"}
+                    text={id}
+                  />
+                }
+              </Group>
+            )
+          )}
         </Group>
       </Canvas>
     </GestureHandler>

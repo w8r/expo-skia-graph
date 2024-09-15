@@ -5,11 +5,12 @@ import {
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
-import { useSharedValue, withDecay } from "react-native-reanimated";
+import { useSharedValue } from "react-native-reanimated";
 import { invertTransform, rotateZ, translate, zoomAroundPoint } from "./utils";
 import { View } from "react-native";
 import { MutableRefObject, useCallback, useRef } from "react";
 import { useVis } from "./context";
+import { GraphNode } from "../../types/graph";
 
 interface GestureHandlerProps {
   matrix: SharedValue<SkMatrix>;
@@ -20,12 +21,38 @@ interface GestureHandlerProps {
 export const GestureHandler = ({ matrix, children }: GestureHandlerProps) => {
   const pivot = useSharedValue(Skia.Point(0, 0));
   const offset = useSharedValue(Skia.Matrix());
-  const { getElementAt, selectNode, clearSelection } = useVis();
-  const pan = Gesture.Pan().onChange((event) => {
-    // here we can have lasso
-    // or be dragging nodes
-    matrix.value = translate(matrix.value, event.changeX, event.changeY);
-  });
+  const {
+    getElementAt,
+    selectNode,
+    clearSelection,
+    isSelecting,
+    isDragging,
+    setIsDragging,
+    screenToWorld,
+    moveNode,
+  } = useVis();
+  const pan = Gesture.Pan()
+    .onBegin((evt) => {
+      const node = getElementAt(evt.x, evt.y);
+      if (node) {
+        setIsDragging(node as GraphNode);
+        selectNode(node.id);
+      }
+    })
+    .onChange((event) => {
+      // here we can have lasso
+      // or be dragging nodes
+      if (isDragging) {
+        const coord = screenToWorld(event.x, event.y);
+        moveNode(isDragging.id, coord.x, coord.y);
+      } else {
+        matrix.value = translate(matrix.value, event.changeX, event.changeY);
+      }
+    })
+    .onEnd(() => {
+      setIsDragging(null);
+      clearSelection();
+    });
   const containerRef = useRef<View>(null) as MutableRefObject<View>;
   const pinch = Gesture.Pinch()
     .onBegin((event) => {

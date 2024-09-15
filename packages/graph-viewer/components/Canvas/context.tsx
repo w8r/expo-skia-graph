@@ -1,8 +1,13 @@
-import React, { useCallback, type Dispatch, type SetStateAction } from "react";
+import React, {
+  useCallback,
+  useRef,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { createContext, FC, useContext, useState, useEffect } from "react";
 import type { Graph, GraphEdge, GraphNode, Hex, Id } from "../../types/graph";
 import { ViewProps } from "react-native";
-import { quadtree as d3quadtree } from "d3-quadtree";
+import { quadtree as d3quadtree, Quadtree } from "d3-quadtree";
 import { Skia, vec, type SkMatrix } from "@shopify/react-native-skia";
 import { makeMutable } from "react-native-reanimated";
 import { getTransformFromShapes, invertTransform } from "./utils";
@@ -47,6 +52,10 @@ export type VisState = {
   setGraph: (graph: Graph) => void;
   isSelecting: boolean;
   setIsSelecting: (isSelecting: boolean) => void;
+  isScaling: boolean;
+  setIsScaling: (isScaling: boolean) => void;
+  isDragging: GraphNode | null;
+  setIsDragging: (isDragging: GraphNode | null) => void;
 
   selectedNodes: GraphNode[];
   setSelectedNodes: (selectedNodes: GraphNode[]) => void;
@@ -62,6 +71,7 @@ export type VisState = {
   clearSelection: () => void;
 
   getElementAt: (x: number, y: number) => GraphNode | GraphEdge | null;
+  screenToWorld: (sx: number, sy: number) => { x: number; y: number };
 
   matrix: MutableMatrix;
   setMatrix: Dispatch<SetStateAction<MutableMatrix>>;
@@ -78,12 +88,17 @@ export const VisContext = createContext<VisState>({
 
 export const VisProvider: FC<ViewProps> = ({ children }) => {
   const [graph, setGraph] = useState<Graph>(defaultGraph);
-  const quadtree = d3quadtree<GraphNode>()
-    .x((d) => d.attributes.x)
-    .y((d) => d.attributes.y);
+  const quadtree = useRef<Quadtree<GraphNode>>();
 
-  console.log("graph", graph);
-  quadtree.addAll(graph.nodes);
+  useEffect(() => {
+    quadtree.current = d3quadtree<GraphNode>()
+      .x((d) => d.attributes.x)
+      .y((d) => d.attributes.y);
+    quadtree.current.addAll(graph.nodes);
+  }, []);
+
+  //console.log("graph", graph);
+  //quadtree.addAll(graph.nodes);
 
   const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
 
@@ -91,19 +106,21 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
   const [selectedEdges, setSelectedEdges] = useState<GraphEdge[]>([]);
 
   const [isSelecting, setIsSelecting] = useState(false);
+  const [isScaling, setIsScaling] = useState(false);
+  const [isDragging, setIsDragging] = useState<GraphNode | null>(null);
   const [size, setSize] = useState({ width: 200, height: 200 });
   const initialMatrix = makeMutable(Skia.Matrix());
   const [matrix, setMatrix] = useState<MutableMatrix>(initialMatrix);
 
   useEffect(() => {
     matrix.value = getTransformFromShapes(points, size.width, size.height);
-
-    console.log("change", matrix.value.get());
-  }, []);
+  }, [size]);
 
   useEffect(() => {
     setSelectedNodes(graph.nodes.filter((node) => node.attributes.selected));
     setSelectedEdges(graph.edges.filter((edge) => edge.attributes.selected));
+
+    // TODO: make sure we don't re-center at every resize
   }, [graph]);
 
   const selectNode = (id: string | string[]) => {
@@ -138,7 +155,9 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
   const getElementAt = useCallback(
     (x: number, y: number) => {
       const pos = screenToWorld(x, y);
-      let node = quadtree.find(pos.x, pos.y, tolerance) || null;
+
+      let node = quadtree.current?.find(pos.x, pos.y, tolerance) || null;
+      console.log("query", x, y, pos.x, pos.y, node);
       if (node) {
         const dx = node.attributes.x - pos.x;
         const dy = node.attributes.y - pos.y;
@@ -188,7 +207,7 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
   const addNode = (node: GraphNode) => {
     graph.nodes.push(node);
     setGraph({ ...graph });
-    quadtree.add(node);
+    quadtree.current?.add(node);
   };
 
   const removeNode = (id: Id) => {
@@ -196,20 +215,20 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
     if (!node) return;
     graph.nodes = graph.nodes.filter((n) => n.id !== id);
     setGraph({ ...graph });
-    quadtree.remove(node);
+    quadtree.current?.remove(node);
   };
 
   const moveNode = (id: Id, x: number, y: number) => {
     const node = nodeMap.get(id);
     if (!node) return;
-    quadtree.remove(node);
+    quadtree.current?.remove(node);
 
     node.attributes.x = x;
     node.attributes.y = y;
 
     setGraph({ ...graph });
 
-    requestAnimationFrame(() => quadtree.add(node));
+    requestAnimationFrame(() => quadtree.current?.add(node));
   };
 
   return (
@@ -220,6 +239,10 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
           graph,
           isSelecting,
           setIsSelecting,
+          isDragging,
+          setIsDragging,
+          isScaling,
+          setIsScaling,
 
           selectedNodes,
           setSelectedNodes,
@@ -238,6 +261,7 @@ export const VisProvider: FC<ViewProps> = ({ children }) => {
 
           matrix,
           setMatrix,
+          screenToWorld,
           size,
           setSize,
         } as VisState
